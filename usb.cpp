@@ -12,6 +12,8 @@ USB::USB()
     for(int i = 0; i < 10; i++){
         flash_list[i] = new char[128];
     }
+    prev = new char[4096];
+    cur = new char[4096];
 }
 
 USB::~USB()
@@ -25,6 +27,8 @@ USB::~USB()
         delete(flash_list[i]);
     }
     delete(flash_list);
+    delete(prev);
+    delete(cur);
 }
 
 int USB::getDeviceList()
@@ -40,6 +44,9 @@ int USB::getDeviceList()
     }
     usb_num = i;
     pclose(cmd);
+    if(usb_prev_num == usb_num)
+        return -1;
+    usb_prev_num = usb_num;
     return i;
 }
 
@@ -52,7 +59,6 @@ const char *USB::getDeviceInfo(int num, const char* request, int offset)
     strcat(command, usb_list[num]);
     strcat(command, " | grep ");
     strcat(command, request);
-    cout << command << endl;
     FILE *cmd = popen(command, "r");
     if(!cmd)
         cout << "Open error" << endl;
@@ -94,11 +100,6 @@ int USB::getFlashList()
         }
 
     }
-    j = 0;
-    while(j < 20)
-        cout << (int)buffer[j++] << "  ";
-    cout << flash_list[0] << "\t" << strlen(flash_list[0]) << endl
-         << flash_list[1] << "\t" << strlen(flash_list[1]) << endl;
     pclose(cmd);
     strcpy(flash, buffer);
     delete(tmp);
@@ -111,10 +112,39 @@ void USB::unmount(const char* fl)
     command[0] = '\0';
     strcat(command, "umount /media/vladiislav/");
     strcat(command, fl);
-    cout << command << endl;
+
     FILE *cmd = popen(command, "r");
     if(!cmd)
         cout << "Open error" << endl;
     delete(command);
     pclose(cmd);
+}
+
+bool USB::isReleased()
+{
+    int i = 0;
+    char *tmp = new char[128];
+    /*while(i++ < 4096)
+        prev[i] = cur[i] = '\0';
+*/
+
+
+    FILE *cmd = popen("lsusb", "r");
+    if(!cmd)
+        cout << "Open error" << endl;
+
+    for(i = 0; fgets(tmp, 128, cmd); i++)
+        strcat(cur, tmp);
+        //cout << "34 twrfgv";
+    //cout << "34 twrfgv";
+    pclose(cmd);
+    delete(tmp);
+
+    if(!strstr(cur, prev)){
+        return true;
+    }
+    else{
+        strcpy(prev, cur);
+        return false;
+    }
 }

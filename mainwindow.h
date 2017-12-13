@@ -12,10 +12,8 @@ class MainWindow : public QWidget
     QPushButton *btn;
     QGridLayout *grid;
     USB usb;
-    char* device;
 
     static void timer(MainWindow*);
-    void chooseDevice(QListWidgetItem*);
 public:
     explicit MainWindow(QWidget *parent = 0);
 

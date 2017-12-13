@@ -4,25 +4,14 @@ void MainWindow::timer(MainWindow *parent)
 {
     while(true){
         emit(parent->releaseFlash());
-        sleep(5);
+        usleep(100000);
     }
-}
-
-void MainWindow::chooseDevice(QListWidgetItem* it)
-{
-    cout << "@#$@#$@#$@#$@#$";
-    strcpy(device, it->text().toStdString().c_str());
 }
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
     this->setFixedSize(500, 300);
     usb_list = new QListWidget(this);
-    connect(usb_list,
-            SIGNAL(activated(QModelIndex)),
-            this,
-            SLOT(chooseDevice(QListWidgetItem*))
-            );
 
     btn = new QPushButton(this);
     btn->setText("Unmount");
@@ -33,19 +22,18 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     grid->addWidget(btn, 1, 0);
 
     QtConcurrent::run(timer, this);
-    device = new char[15];
 }
 
 void MainWindow::releaseFlash()
 {
     int i = 0;
     char* buf = new char[100];
-    while (i--)
-        buf[i] = '\0';
-
-    usb_list->clear();
 
     i = usb.getDeviceList();
+    if(i == -1)
+        return;
+    usb_list->clear();
+
     while(i--){
         buf[0] = '\0';
         if(strcmp(usb.getDeviceInfo(i, "iInterface", 30), "5") >= 0){
@@ -62,13 +50,13 @@ void MainWindow::releaseFlash()
         }
     }
     i = usb.getFlashList();
-    while(i--){
+    while(i--)
         usb_list->addItem(usb.flash_list[i]);
-    }
     delete(buf);
 }
 
 void MainWindow::unmountFlash()
 {
-    usb.unmount(usb_list->currentItem()->text().toStdString().c_str());
+    if(usb_list->currentItem() != NULL)
+        usb.unmount(usb_list->currentItem()->text().toStdString().c_str());
 }

@@ -19,9 +19,11 @@ public:
     const char* getDeviceInfo(int, const char*, int);
     int getFlashList();
     void unmount(const char*);
+    bool isReleased();
 
     char **usb_list, *flash, **flash_list;
-    int usb_num;
+    char *prev, *cur;
+    int usb_num, usb_prev_num;
 };
 
 #endif // USB_H
